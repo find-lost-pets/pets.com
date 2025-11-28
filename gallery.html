@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>FindMyPet — Lost & Found Gallery</title>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:#f5f9ff;color:#0b3b4c;}
+header{background:#0b76ef;color:white;padding:18px;text-align:center;font-size:clamp(18px,4vw,28px);}
+main{padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;}
+.card{background:white;border-radius:14px;box-shadow:0 8px 18px rgba(0,0,0,0.08);overflow:hidden;display:flex;flex-direction:column;transition:transform 0.2s;}
+.card:hover{transform:translateY(-4px);}
+.card img{width:100%;height:180px;object-fit:cover;}
+.card-body{padding:14px;flex:1;display:flex;flex-direction:column;}
+.card h3{margin:0 0 6px;font-size:18px;color:#063a58;}
+.card p{margin:4px 0;font-size:14px;flex:1;}
+.card .contact{margin-top:8px;font-weight:600;color:#0b76ef;}
+.badge{display:inline-block;padding:4px 8px;border-radius:8px;font-size:12px;color:white;font-weight:700;margin-bottom:6px;}
+.lost{background:#ef4b4b;}
+.found{background:#4bef6f;}
+</style>
+</head>
+<body>
+<header>FindMyPet — Lost & Found Pets Gallery</header>
+<main id="gallery">Loading pets...</main>
+
+<script>
+// Replace with your JSON endpoint from OpenSheet
+const SHEET_JSON_URL = "https://opensheet.elk.sh/YOUR_SHEET_ID/Unified";
+
+async function loadPets(){
+  const gallery = document.getElementById('gallery');
+  gallery.innerHTML = "Loading pets...";
+  try {
+    const res = await fetch(SHEET_JSON_URL);
+    const data = await res.json();
+    if (!data.length) {
+      gallery.innerHTML = "<p>No pets reported yet.</p>";
+      return;
+    }
+    // Build cards
+    gallery.innerHTML = "";
+    data.reverse().forEach(item => {
+      // Use entry values: Lost/Found, Pet Type, Name, Description, Photo Link, Contact
+      const type = item['Lost/Found'] || 'Lost';
+      const petType = item['Pet Type'] || '';
+      const name = item['Pet Name'] || '';
+      const desc = item['Description'] || '';
+      const photo = item['Photo Link'] || 'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=400&h=300&fit=crop';
+      const contact = item['Contact'] || '';
+      const badgeClass = type.toLowerCase().includes('lost') ? 'lost' : 'found';
+      
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <img src="${photo}" alt="${petType} ${name}">
+        <div class="card-body">
+          <span class="badge ${badgeClass}">${type}</span>
+          <h3>${name || petType}</h3>
+          <p>${desc}</p>
+          <div class="contact">📞 ${contact}</div>
+        </div>
+      `;
+      gallery.appendChild(card);
+    });
+  } catch(err){
+    console.error(err);
+    gallery.innerHTML = "<p>Failed to load pets. Try again later.</p>";
+  }
+}
+
+// Load on page load
+loadPets();
+</script>
+</body>
+</html>
