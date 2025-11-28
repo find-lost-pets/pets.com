@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FindMyPet — Lost & Found Pets Worldwide</title>
+<style>
+  :root{--accent:#0b76ef;--accent-dark:#075fb8;--glass:rgba(255,255,255,0.85)}
+  html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+  body{display:grid;place-items:center;background: radial-gradient(circle at 10% 10%, #fff 0%, #f3f9ff 20%, #e8f3ff 50%, #dfefff 100%), url('https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=0c7b7b3a5f7d2b1ec0b9a3a1b2c6f3d3') center/cover no-repeat; }
+  .card{width:min(920px,94%);backdrop-filter: blur(6px); background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.82)); border-radius:18px; box-shadow:0 10px 30px rgba(10,10,10,0.12); padding:36px; display:grid; grid-template-columns: 1fr 420px; gap:28px; align-items:center;}
+  .hero{padding:10px 6px;}
+  h1{margin:0;font-size:clamp(22px,4vw,36px); color:#07324a;}
+  p.lead{margin:12px 0 20px;color:#244c63; font-size:clamp(14px,1.6vw,18px);}
+  .actions{display:flex; gap:12px; flex-wrap:wrap;}
+  .btn{display:inline-flex; align-items:center; gap:10px; border:0; cursor:pointer; padding:14px 18px; border-radius:12px; font-weight:600; font-size:15px;}
+  .btn-primary{background:linear-gradient(180deg,var(--accent),var(--accent-dark)); color:white; box-shadow: 0 6px 18px rgba(11,118,239,0.28);}
+  .btn-secondary{background:transparent; border:2px solid rgba(7,95,184,0.12); color: #063a58;}
+  .right-panel{display:flex;flex-direction:column;align-items:center; padding:12px;}
+  .card-illustration{width:100%; max-width:360px; border-radius:12px; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,0.08);}
+  footer{margin-top:18px;color:#33596b;font-size:13px;}
+  @media (max-width:880px){.card{grid-template-columns:1fr; padding:22px;} .right-panel{order:-1}}
+</style>
+</head>
+<body>
+  <main class="card" role="main" aria-labelledby="main-title">
+    <section class="hero">
+      <h1 id="main-title">FindMyPet — Lost & Found Pets Worldwide</h1>
+      <p class="lead">One tap reporting and worldwide coverage. Report lost or found pets, automatically share your location, and connect with owners fast.</p>
+      <div class="actions">
+        <!-- Direct user to the location capture page on the same domain -->
+        <a class="btn btn-primary" id="report-btn" href="location.html" title="Report a lost or found pet — one tap">
+          📍 Report Lost / Found Pet
+        </a>
+        <a class="btn btn-secondary" id="view-btn" href="gallery.html" title="View recent reports">
+          🐾 View Reports
+        </a>
+      </div>
+      <footer>
+        Tip: If the user allows location, they'll be redirected directly to the form with GPS attached.
+      </footer>
+    </section>
+
+    <aside class="right-panel" aria-hidden="false">
+      <div class="card-illustration">
+        <img alt="Cute pets banner" src="https://images.unsplash.com/photo-1517849845537-4d257902454a?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=89f5f6a68ea8b7f4b2e8c4f0a7ad1b3d" style="width:100%;height:100%;object-fit:cover;display:block;">
+      </div>
+      <p style="margin-top:12px;color:#0b3b4c;text-align:center;font-weight:600;">Helping reunite pets with owners — worldwide.</p>
+    </aside>
+  </main>
+</body>
+</html>
