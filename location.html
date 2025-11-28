@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Share Location — FindMyPet</title>
+<style>
+  html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;}
+  body{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f5fbff,#eef7ff);}
+  .box{width:95%;max-width:520px;background:white;border-radius:14px;padding:28px;text-align:center;box-shadow:0 10px 30px rgba(10,20,30,0.08);}
+  h2{margin:0 0 8px;color:#063a58;}
+  p{color:#2b5160;margin:6px 0 18px;}
+  .btn{padding:14px 18px;border-radius:12px;border:0;font-weight:700;cursor:pointer;}
+  .btn-primary{background:#0b76ef;color:white;}
+  .small{font-size:13px;color:#56737f;margin-top:12px;}
+  .spinner{margin:18px auto 0;border:4px solid #f1f3f5;border-top:4px solid #0b76ef;border-radius:50%;width:44px;height:44px; animation:spin 1s linear infinite; display:none;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+  <div class="box" role="dialog" aria-live="polite">
+    <h2>Share your location</h2>
+    <p>Tap the button once — your device will ask to allow location. After that you'll go straight to the report form.</p>
+
+    <button id="go" class="btn btn-primary">📍 Tap to share location</button>
+    <div id="spinner" class="spinner" aria-hidden="true"></div>
+    <p id="status" class="small">We only use your location to help reunite pets. You can cancel at any time.</p>
+  </div>
+
+<script>
+/*
+  REQUIRED STEPS BEFORE USE:
+  1) Replace APPS_SCRIPT_URL with your Apps Script web app URL (see instructions).
+  2) Replace FORM_PREFILL_BASE with your Google Form prefill URL base (see instructions).
+     Example: https://docs.google.com/forms/d/e/FORM_ID/viewform?usp=pp_url&entry.123456=
+     We'll append latitude and longitude as additional entry parameters.
+*/
+
+const APPS_SCRIPT_URL = "YOUR_APPS_SCRIPT_URL"; // e.g. https://script.google.com/macros/s/AKfycbx.../exec
+const FORM_PREFILL_BASE = "YOUR_GOOGLE_FORM_PREFILL_URL"; // e.g. https://docs.google.com/forms/d/e/FORM_ID/viewform?usp=pp_url&entry.111=LOST_OR_FOUND&entry.222=
+
+const getElem = id => document.getElementById(id);
+const btn = getElem('go'), spinner = getElem('spinner'), status = getElem('status');
+
+function showSpinner(show){
+  spinner.style.display = show ? 'block' : 'none';
+  btn.disabled = show;
+  btn.style.opacity = show ? 0.6 : 1;
+}
+
+async function postLocation(payload) {
+  try {
+    // Send to Apps Script to be stored
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload),
+      mode: 'cors'
+    });
+    return res.ok ? await res.json().catch(()=>({ok:true})) : {ok:false};
+  } catch(e){
+    console.warn('Post failed', e);
+    return {ok:false};
+  }
+}
+
+function redirectToForm(lat, lng, acc) {
+  // Customize which form fields receive the coordinates:
+  // We'll append latitude, longitude, accuracy and a "from" field.
+  // Example: FORM_PREFILL_BASE + encodeURIComponent(lat) + '&entry.222=' + encodeURIComponent(lng) + '&entry.333=' + encodeURIComponent(acc)
+  // Replace the ENTRY IDs in the deploy instructions.
+  const url = FORM_PREFILL_BASE + encodeURIComponent(lat) + '&entry.222=' + encodeURIComponent(lng) + '&entry.333=' + encodeURIComponent(acc);
+  window.location.href = url;
+}
+
+btn.addEventListener('click', async () => {
+  if (!navigator.geolocation) {
+    status.textContent = 'Geolocation not supported by your browser. Please open the form and type your location.';
+    return;
+  }
+  showSpinner(true);
+  status.textContent = 'Requesting location...';
+
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    const acc = pos.coords.accuracy;
+    status.textContent = 'Location captured. Sending...';
+
+    // Post to Apps Script (best effort). It's fine if this fails; we still redirect.
+    const payload = {
+      timestamp: new Date().toISOString(),
+      latitude: lat,
+      longitude: lng,
+      accuracy: acc,
+      userAgent: navigator.userAgent || '',
+      referrer: document.referrer || ''
+    };
+    await postLocation(payload);
+
+    // Redirect immediately to the Google Form with prefilled coordinates
+    redirectToForm(lat, lng, acc);
+  }, (err) => {
+    showSpinner(false);
+    status.textContent = 'Location permission denied or timed out. You can still continue to the form and enter location manually.';
+    // If permission denied, redirect to form without coords (or with blank)
+    const url = FORM_PREFILL_BASE + '&entry.222=&entry.333=';
+    window.location.href = url;
+  }, {
+    enableHighAccuracy: true,
+    timeout: 20000,
+    maximumAge: 0
+  });
+});
+</script>
+</body>
+</html>
