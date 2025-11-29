@@ -21,13 +21,12 @@ main{max-width:1300px;margin:auto;padding:16px;display:grid;grid-template-column
 .card-content span{font-weight:600;}
 #map{width:100%;height:500px;border-radius:12px;margin:20px 0;}
 footer{text-align:center;padding:12px;color:#555;font-size:13px;}
-.btn-form{display:inline-block;margin-top:6px;padding:5px 10px;background:#ff6f61;color:white;border-radius:6px;text-decoration:none;font-size:13px;}
 </style>
 </head>
 <body>
 <header>
 <h1>FindMyPet — Creative Live Gallery</h1>
-<p>Realistic live dummy pets updating every 10 minutes</p>
+<p>Unique dummy pets updating every 10 minutes</p>
 </header>
 
 <main id="cards"><p style="grid-column:1/-1;text-align:center;">Loading pets...</p></main>
@@ -38,18 +37,18 @@ footer{text-align:center;padding:12px;color:#555;font-size:13px;}
 <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 <script>
 /******** CONFIGURATION ********/
-const NUM_DUMMIES = 2000; // Number of pets shown
+const NUM_DUMMIES = 2000; 
 const UPDATE_INTERVAL = 10*60*1000; // 10 minutes
 const PET_TYPES = ['Dog','Cat','Rabbit','Bird','Hamster','Parrot','Guinea Pig'];
 const LOST_FOUND = ['Lost','Found'];
 const PHOTO_POOL = [
-  'https://place-puppy.com/400x180', 
-  'https://placekitten.com/400/180', 
-  'https://placebear.com/400/180', 
-  'https://placebeard.it/400x180', 
-  'https://loremflickr.com/400/180/dog', 
-  'https://loremflickr.com/400/180/cat', 
-  'https://loremflickr.com/400/180/animal'
+  'https://loremflickr.com/400/180/dog?random=1',
+  'https://loremflickr.com/400/180/cat?random=2',
+  'https://loremflickr.com/400/180/rabbit?random=3',
+  'https://loremflickr.com/400/180/parrot?random=4',
+  'https://loremflickr.com/400/180/hamster?random=5',
+  'https://loremflickr.com/400/180/bird?random=6',
+  'https://loremflickr.com/400/180/guineapig?random=7'
 ];
 const DESCRIPTION_TEMPLATES = [
   "Friendly and playful, loves attention!",
@@ -60,7 +59,9 @@ const DESCRIPTION_TEMPLATES = [
   "Curious and adventurous, always exploring.",
   "Sweet and gentle, perfect for families.",
   "Very vocal and social, loves company.",
-  "Bright eyes and soft fur, very affectionate."
+  "Bright eyes and soft fur, very affectionate.",
+  "Tiny paws, big heart, full of love.",
+  "Loves climbing and exploring everywhere."
 ];
 /********************************/
 
@@ -82,10 +83,14 @@ function randomName(){
 }
 
 // Random photo
-function randomPhoto(){ return PHOTO_POOL[Math.floor(Math.random()*PHOTO_POOL.length)]; }
+function randomPhoto(){
+  return PHOTO_POOL[Math.floor(Math.random()*PHOTO_POOL.length)] + '&v=' + Math.floor(Math.random()*100000);
+}
 
 // Random description
-function randomDescription(){ return DESCRIPTION_TEMPLATES[Math.floor(Math.random()*DESCRIPTION_TEMPLATES.length)]; }
+function randomDescription(){ 
+  return DESCRIPTION_TEMPLATES[Math.floor(Math.random()*DESCRIPTION_TEMPLATES.length)]; 
+}
 
 // Generate dummy pets
 function generateDummyPets(num){
@@ -100,8 +105,7 @@ function generateDummyPets(num){
       latitude: coord.lat,
       longitude: coord.lng,
       accuracy: Math.floor(Math.random()*50)+5,
-      description: randomDescription(),
-      contact: "+0000000000"
+      description: randomDescription()
     });
   }
   return pets;
@@ -116,7 +120,6 @@ function renderGallery(pets){
     // Card
     const card=document.createElement('div');
     card.className='card';
-    const formLink = "#"; // placeholder
     card.innerHTML=`
       <img src="${p.photo}" alt="Pet Photo">
       <div class="card-content">
@@ -124,14 +127,12 @@ function renderGallery(pets){
         <p><span>Type:</span> ${p.type}</p>
         <p>${p.description}</p>
         <p><span>Location:</span> ${p.latitude.toFixed(2)}, ${p.longitude.toFixed(2)} (±${p.accuracy}m)</p>
-        <p><span>Contact:</span> ${p.contact}</p>
-        <a class="btn-form" href="${formLink}" target="_blank">Report Sighting / Update</a>
       </div>`;
     container.appendChild(card);
 
     // Map marker
     const marker=L.marker([p.latitude,p.longitude]);
-    marker.bindPopup(`<strong>${p.name} (${p.status})</strong><br>Type: ${p.type}<br>${p.description}<br>Contact: ${p.contact}`);
+    marker.bindPopup(`<strong>${p.name} (${p.status})</strong><br>Type: ${p.type}<br>${p.description}`);
     markers.addLayer(marker);
   });
 }
@@ -145,6 +146,7 @@ setInterval(()=>{
   pets = generateDummyPets(NUM_DUMMIES);
   renderGallery(pets);
 },UPDATE_INTERVAL);
+
 </script>
 </body>
 </html>
