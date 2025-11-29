@@ -3,188 +3,141 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pet Gallery</title>
-
+<title>FindMyPet — Live Pets Gallery</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css"/>
 <style>
-    body {
-        margin: 0;
-        background: #eef2f3;
-        font-family: Arial, sans-serif;
-    }
-
-    h1 {
-        text-align: center;
-        background: #007bff;
-        color: white;
-        padding: 20px;
-        margin: 0;
-        font-size: 26px;
-    }
-
-    #gallery {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-        gap: 15px;
-        padding: 20px;
-    }
-
-    .pet {
-        background: white;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 0 10px rgba(0,0,0,0.15);
-        transition: 0.2s;
-    }
-
-    .pet:hover {
-        transform: scale(1.02);
-    }
-
-    .pet img {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-    }
-
-    .info {
-        padding: 12px;
-    }
-
-    .status {
-        font-weight: bold;
-        font-size: 18px;
-        margin-bottom: 4px;
-    }
-
-    .lost {
-        color: red;
-    }
-
-    .found {
-        color: green;
-    }
-
-    .meta {
-        font-size: 14px;
-        color: #444;
-    }
-
-    .desc {
-        margin-top: 8px;
-        font-size: 14px;
-        color: #333;
-    }
+body{margin:0;font-family:system-ui,Arial,sans-serif;background:#f0f8ff;}
+header{padding:25px;text-align:center;background:linear-gradient(135deg,#0b76ef,#075fb8);color:white;}
+header h1{margin:0;font-size:clamp(24px,5vw,38px);}
+header p{margin:5px 0 0;font-size:clamp(14px,2.5vw,18px);}
+main{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:16px;max-width:1200px;margin:auto;}
+.card{background:white;border-radius:15px;box-shadow:0 6px 20px rgba(0,0,0,0.1);overflow:hidden;transition:transform 0.2s;}
+.card:hover{transform:scale(1.03);}
+.card img{width:100%;height:180px;object-fit:cover;}
+.card-content{padding:12px;display:flex;flex-direction:column;gap:6px;}
+.card-content h3{margin:0;color:#063a58;}
+.card-content p{margin:0;font-size:14px;color:#244c63;}
+.card-content span{font-weight:600;}
+#map{width:100%;height:550px;margin:20px 0;border-radius:12px;}
+footer{text-align:center;padding:14px;color:#33596b;font-size:13px;}
+.btn-form{display:inline-block;margin-top:6px;padding:6px 10px;background:#0b76ef;color:white;border-radius:8px;text-decoration:none;font-size:13px;transition:0.2s;}
+.btn-form:hover{background:#075fb8;}
 </style>
 </head>
-
 <body>
 
-<h1>Pet Gallery</h1>
+<header>
+<h1>FindMyPet — Live Pets Gallery</h1>
+<p>Thousands of unique pets displayed dynamically with creative randomness</p>
+</header>
 
-<div id="gallery"></div>
+<main id="cards">
+<p style="grid-column:1/-1;text-align:center;">Loading pets...</p>
+</main>
+
+<div id="map"></div>
+<footer>&copy; FindMyPet — Creative Live Demo</footer>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 
 <script>
-/* -------------------------------
-   REALISTIC DUMMY PET GENERATOR
--------------------------------- */
+// Configuration
+const NUM_DUMMIES = 5000;
+const UPDATE_INTERVAL = 10*60*1000; // 10 minutes
+const PET_TYPES = ['Dog','Cat','Rabbit','Bird','Hamster','Parrot','Ferret','Turtle'];
+const LOST_FOUND = ['Lost','Found'];
+const FORM_BASE_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdTXTt55-XIJ38Yq1rkfbWXpXnqml1QrI--1-TnQU3oU-bzQg/viewform?usp=pp_url";
+const PHOTO_BASE = "https://place-puppy.com/400x180";
 
-const petTypes = ["Dog", "Cat", "Parrot", "Rabbit", "Turtle", "Hamster", "Pigeon"];
-const names = ["Bella","Max","Coco","Simba","Luna","Milo","Rocky","Snow","Shadow","Lucky","Ginger","Ruby","Oreo","Nala"];
-const statuses = ["Lost", "Found"];
-const descriptions = [
-    "Last seen near a busy road.",
-    "Found wandering alone near a shop.",
-    "Very friendly but looks scared.",
-    "Seems injured and hungry.",
-    "Seen following people around.",
-    "Looks well-groomed but lost.",
-    "Found hiding under a car.",
-    "Was crying loudly for help.",
-    "Has a collar but no tag.",
-    "Looks exhausted and confused."
-];
+// Initialize Leaflet map
+const map = L.map('map').setView([20,0],2);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'&copy; OpenStreetMap contributors'
+}).addTo(map);
+let markers = L.markerClusterGroup();
+map.addLayer(markers);
 
-function randomPhoto(type) {
-    // Realistic lost/found animal images
-    const base = {
-        Dog: [
-            "https://placedog.net/500/400", 
-            "https://loremflickr.com/500/400/dog"
-        ],
-        Cat: [
-            "https://loremflickr.com/500/400/cat",
-            "https://placekitten.com/500/400"
-        ],
-        Parrot: [
-            "https://loremflickr.com/500/400/parrot"
-        ],
-        Rabbit: [
-            "https://loremflickr.com/500/400/rabbit"
-        ],
-        Turtle: [
-            "https://loremflickr.com/500/400/turtle"
-        ],
-        Hamster: [
-            "https://loremflickr.com/500/400/hamster"
-        ],
-        Pigeon: [
-            "https://loremflickr.com/500/400/pigeon"
-        ]
-    };
-    const list = base[type] || base.Dog;
-    return list[Math.floor(Math.random() * list.length)];
+// Utility functions
+function randomCoord(){ return {lat:(Math.random()*180)-90, lng:(Math.random()*360)-180}; }
+function randomName(){ 
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    return letters.charAt(Math.floor(Math.random()*letters.length))+
+           letters.charAt(Math.floor(Math.random()*letters.length))+
+           Math.floor(Math.random()*9999);
+}
+function randomAccuracy(){ return Math.floor(Math.random()*50)+5; }
+function randomPhoto(){ 
+    // Use different images by appending random seed
+    return PHOTO_BASE+"?r="+Math.floor(Math.random()*10000);
 }
 
-function randomLocation() {
-    const places = [
-        "Nairobi CBD", "Westlands", "Kilimani", "South B",
-        "Mombasa", "Kisumu", "Nakuru", "Eldoret", 
-        "Thika", "Ruiru", "Meru", "Kitengela"
-    ];
-    return places[Math.floor(Math.random() * places.length)];
+// Generate creative dummy pets
+function generateDummyPets(num){
+    let pets = [];
+    for(let i=0;i<num;i++){
+        const coord = randomCoord();
+        pets.push({
+            name: randomName(),
+            type: PET_TYPES[Math.floor(Math.random()*PET_TYPES.length)],
+            status: LOST_FOUND[Math.floor(Math.random()*LOST_FOUND.length)],
+            photo: randomPhoto(),
+            latitude: coord.lat,
+            longitude: coord.lng,
+            accuracy: randomAccuracy(),
+            contact: "+0000000000"
+        });
+    }
+    return pets;
 }
 
-function generatePet() {
-    const type = petTypes[Math.floor(Math.random() * petTypes.length)];
-    return {
-        status: statuses[Math.floor(Math.random() * statuses.length)],
-        type,
-        name: names[Math.floor(Math.random() * names.length)],
-        desc: descriptions[Math.floor(Math.random() * descriptions.length)],
-        location: randomLocation(),
-        time: new Date().toLocaleString(),
-        photo: randomPhoto(type)
-    };
-}
+// Render gallery
+function renderGallery(pets){
+    const container = document.getElementById('cards');
+    container.innerHTML='';
+    markers.clearLayers();
 
-function loadGallery() {
-    const gallery = document.getElementById("gallery");
-    gallery.innerHTML = "";
+    pets.forEach(p=>{
+        // Prefilled Form link
+        const formLink = FORM_BASE_URL+
+            `&entry.1246519423=${encodeURIComponent(p.name)}`+
+            `&entry.640822630=${encodeURIComponent(p.latitude)}`+
+            `&entry.658800613=${encodeURIComponent(p.longitude)}`;
 
-    for (let i = 0; i < 1000; i++) {  // THOUSANDS OF PETS
-        const pet = generatePet();
-
-        gallery.innerHTML += `
-            <div class="pet">
-                <img src="${pet.photo}">
-                <div class="info">
-                    <div class="status ${pet.status === "Lost" ? "lost" : "found"}">
-                        ${pet.status} - ${pet.name}
-                    </div>
-                    <div class="meta">${pet.type} • ${pet.location}</div>
-                    <div class="meta">Reported: ${pet.time}</div>
-                    <div class="desc">${pet.desc}</div>
-                </div>
+        // Create card
+        const card = document.createElement('div');
+        card.className='card';
+        card.innerHTML=`
+            <img src="${p.photo}" alt="Pet Photo">
+            <div class="card-content">
+                <h3>${p.name} (${p.status})</h3>
+                <p><span>Type:</span> ${p.type}</p>
+                <p><span>Location:</span> ${p.latitude.toFixed(2)}, ${p.longitude.toFixed(2)} (±${p.accuracy}m)</p>
+                <p><span>Contact:</span> ${p.contact}</p>
+                <a href="${formLink}" target="_blank" class="btn-form">Report Sighting / Update</a>
             </div>
         `;
-    }
+        container.appendChild(card);
+
+        // Map marker
+        const marker = L.marker([p.latitude,p.longitude]);
+        marker.bindPopup(`<strong>${p.name} (${p.status})</strong><br>Type: ${p.type}<br>Contact: ${p.contact}<br><a href="${formLink}" target="_blank" style="color:#0b76ef;text-decoration:underline;">Report Sighting / Update</a>`);
+        markers.addLayer(marker);
+    });
 }
 
-loadGallery();
+// Initial load
+let pets = generateDummyPets(NUM_DUMMIES);
+renderGallery(pets);
 
-// Auto-refresh with new realistic pets every 10 minutes
-setInterval(loadGallery, 600000);
+// Auto-refresh every 10 minutes
+setInterval(()=>{
+    pets = generateDummyPets(NUM_DUMMIES);
+    renderGallery(pets);
+}, UPDATE_INTERVAL);
+
 </script>
-
 </body>
 </html>
