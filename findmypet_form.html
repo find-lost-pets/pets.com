@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FindMyPet Submission</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f4f4f4; }
+    form { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input, select, textarea, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
+    button { background: #28a745; color: white; border: none; cursor: pointer; font-size: 16px; }
+    button:hover { background: #218838; }
+  </style>
+</head>
+<body>
+
+<h2>Report Lost or Found Pet</h2>
+
+<form method="post" action="YOUR_APPS_SCRIPT_WEBAPP_URL">
+  <input type="text" name="petName" placeholder="Pet Name" required>
+  <input type="text" name="petType" placeholder="Pet Type (Dog, Cat, etc.)" required>
+  <select name="status" required>
+    <option value="">Select Status</option>
+    <option value="Lost">Lost</option>
+    <option value="Found">Found</option>
+  </select>
+  <input type="text" name="latitude" placeholder="Latitude" required>
+  <input type="text" name="longitude" placeholder="Longitude" required>
+  <textarea name="message" placeholder="Additional Notes"></textarea>
+  <button type="submit">Submit & Go to WhatsApp</button>
+</form>
+
+</body>
+</html>
