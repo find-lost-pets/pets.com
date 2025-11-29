@@ -1,75 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>FindMyPet — Live Creative Gallery</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>FindMyPet — Creative Live Gallery</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css"/>
 <style>
 body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:#f0f8ff;}
-header{text-align:center;padding:24px;background:linear-gradient(90deg,#ff7f50,#ff6347);color:white;}
-header h1{margin:0;font-size:clamp(24px,4vw,36px);}
-main{max-width:1200px;margin:auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
-.card{background:white;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.12);overflow:hidden;transition:transform 0.2s;}
+header{text-align:center;padding:20px;background:linear-gradient(90deg,#ff6f61,#ffb347);color:white;}
+header h1{margin:0;font-size:clamp(24px,5vw,36px);}
+main{max-width:1300px;margin:auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.card{background:white;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.12);display:flex;flex-direction:column;overflow:hidden;transition:transform 0.2s;}
 .card:hover{transform:scale(1.03);}
 .card img{width:100%;height:180px;object-fit:cover;}
 .card-content{padding:12px;display:flex;flex-direction:column;gap:4px;}
 .card-content h3{margin:0;color:#333;}
 .card-content p{margin:0;color:#555;font-size:14px;}
 .card-content span{font-weight:600;}
-#map{width:100%;height:500px;border-radius:12px;margin:20px 0;box-shadow:0 6px 20px rgba(0,0,0,0.15);}
-footer{text-align:center;padding:14px;color:#444;font-size:13px;}
-.btn-form{display:inline-block;margin-top:8px;padding:6px 10px;background:#ff6347;color:white;border-radius:8px;text-decoration:none;font-size:13px;}
+#map{width:100%;height:500px;border-radius:12px;margin:20px 0;}
+footer{text-align:center;padding:12px;color:#555;font-size:13px;}
+.btn-form{display:inline-block;margin-top:6px;padding:5px 10px;background:#ff6f61;color:white;border-radius:6px;text-decoration:none;font-size:13px;}
 </style>
 </head>
 <body>
 <header>
-<h1>FindMyPet — Live Creative Gallery</h1>
-<p>Dummy pets + real submissions, refreshing every 10 minutes</p>
+<h1>FindMyPet — Creative Live Gallery</h1>
+<p>Realistic live dummy pets updating every 10 minutes</p>
 </header>
 
-<main id="cards"></main>
+<main id="cards"><p style="grid-column:1/-1;text-align:center;">Loading pets...</p></main>
 <div id="map"></div>
 <footer>&copy; FindMyPet</footer>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
-
 <script>
 /******** CONFIGURATION ********/
-const NUM_DUMMIES = 5000; // Number of dummy pets
+const NUM_DUMMIES = 2000; // Number of pets shown
 const UPDATE_INTERVAL = 10*60*1000; // 10 minutes
-const PET_TYPES = ['Dog','Cat','Rabbit','Bird','Hamster','Parrot','Turtle','Ferret'];
+const PET_TYPES = ['Dog','Cat','Rabbit','Bird','Hamster','Parrot','Guinea Pig'];
 const LOST_FOUND = ['Lost','Found'];
-const DESCRIPTIONS = [
-  'Adventurous and playful', 'Shy and sweet', 'Loves to nap', 'Friendly to everyone', 'Super energetic', 
-  'Curious explorer', 'Always hungry', 'Gentle giant', 'Tiny but mighty', 'Loves belly rubs'
+const PHOTO_POOL = [
+  'https://place-puppy.com/400x180', 
+  'https://placekitten.com/400/180', 
+  'https://placebear.com/400/180', 
+  'https://placebeard.it/400x180', 
+  'https://loremflickr.com/400/180/dog', 
+  'https://loremflickr.com/400/180/cat', 
+  'https://loremflickr.com/400/180/animal'
 ];
-const IMAGES = [
-  'https://place-puppy.com/400x180', // dog
-  'https://placekitten.com/400/180', // cat
-  'https://placeimg.com/400/180/animals', // generic animal
-  'https://placebear.com/400/180', // bear-like placeholder
-  'https://place-picsum.photos/400/180?random=1'
+const DESCRIPTION_TEMPLATES = [
+  "Friendly and playful, loves attention!",
+  "Shy but cuddly, enjoys quiet corners.",
+  "Very energetic and loves to run around.",
+  "Loves treats and gets excited easily.",
+  "Has unique spots and a beautiful coat.",
+  "Curious and adventurous, always exploring.",
+  "Sweet and gentle, perfect for families.",
+  "Very vocal and social, loves company.",
+  "Bright eyes and soft fur, very affectionate."
 ];
-const FORM_BASE_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdTXTt55-XIJ38Yq1rkfbWXpXnqml1QrI--1-TnQU3oU-bzQg/viewform?usp=pp_url";
 /********************************/
 
-// Map setup
+// Initialize map
 const map = L.map('map').setView([20,0],2);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-  attribution:'&copy; OpenStreetMap contributors'
-}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
 let markers = L.markerClusterGroup();
 map.addLayer(markers);
 
-// Random utilities
-function randomCoord(){ return {lat:(Math.random()*180)-90,lng:(Math.random()*360)-180}; }
-function randomName(){ const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ'; return letters.charAt(Math.floor(Math.random()*letters.length))+letters.charAt(Math.floor(Math.random()*letters.length))+Math.floor(Math.random()*9999); }
-function randomDescription(){ return DESCRIPTIONS[Math.floor(Math.random()*DESCRIPTIONS.length)]; }
-function randomImage(){ return IMAGES[Math.floor(Math.random()*IMAGES.length)]; }
+// Generate random coordinates
+function randomCoord(){ return {lat:(Math.random()*140)-70,lng:(Math.random()*360)-180}; }
+
+// Random name generator
+function randomName(){
+  const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  return letters.charAt(Math.floor(Math.random()*letters.length))+
+         letters.charAt(Math.floor(Math.random()*letters.length))+
+         Math.floor(Math.random()*9999);
+}
+
+// Random photo
+function randomPhoto(){ return PHOTO_POOL[Math.floor(Math.random()*PHOTO_POOL.length)]; }
+
+// Random description
+function randomDescription(){ return DESCRIPTION_TEMPLATES[Math.floor(Math.random()*DESCRIPTION_TEMPLATES.length)]; }
 
 // Generate dummy pets
 function generateDummyPets(num){
@@ -80,43 +96,42 @@ function generateDummyPets(num){
       name: randomName(),
       type: PET_TYPES[Math.floor(Math.random()*PET_TYPES.length)],
       status: LOST_FOUND[Math.floor(Math.random()*LOST_FOUND.length)],
-      description: randomDescription(),
-      photo: randomImage(),
+      photo: randomPhoto(),
       latitude: coord.lat,
       longitude: coord.lng,
       accuracy: Math.floor(Math.random()*50)+5,
+      description: randomDescription(),
       contact: "+0000000000"
     });
   }
   return pets;
 }
 
-// Render gallery and map
+// Render cards and map
 function renderGallery(pets){
-  const container = document.getElementById('cards');
+  const container=document.getElementById('cards');
   container.innerHTML='';
   markers.clearLayers();
   pets.forEach(p=>{
+    // Card
     const card=document.createElement('div');
     card.className='card';
-    const formLink = FORM_BASE_URL +
-      `&entry.1246519423=${encodeURIComponent(p.name||'')}` +
-      `&entry.640822630=${encodeURIComponent(p.latitude||'')}` +
-      `&entry.658800613=${encodeURIComponent(p.longitude||'')}`;
+    const formLink = "#"; // placeholder
     card.innerHTML=`
       <img src="${p.photo}" alt="Pet Photo">
       <div class="card-content">
         <h3>${p.name} (${p.status})</h3>
         <p><span>Type:</span> ${p.type}</p>
-        <p><span>Description:</span> ${p.description}</p>
+        <p>${p.description}</p>
         <p><span>Location:</span> ${p.latitude.toFixed(2)}, ${p.longitude.toFixed(2)} (±${p.accuracy}m)</p>
         <p><span>Contact:</span> ${p.contact}</p>
-        <a href="${formLink}" target="_blank" class="btn-form">Report Sighting / Update</a>
+        <a class="btn-form" href="${formLink}" target="_blank">Report Sighting / Update</a>
       </div>`;
     container.appendChild(card);
 
+    // Map marker
     const marker=L.marker([p.latitude,p.longitude]);
-    marker.bindPopup(`<strong>${p.name} (${p.status})</strong><br>Type: ${p.type}<br>${p.description}<br>Contact: ${p.contact}<br><a href="${formLink}" target="_blank" style="color:#ff6347;text-decoration:underline;">Report Sighting / Update</a>`);
+    marker.bindPopup(`<strong>${p.name} (${p.status})</strong><br>Type: ${p.type}<br>${p.description}<br>Contact: ${p.contact}`);
     markers.addLayer(marker);
   });
 }
@@ -125,12 +140,11 @@ function renderGallery(pets){
 let pets = generateDummyPets(NUM_DUMMIES);
 renderGallery(pets);
 
-// Refresh every 10 minutes
+// Update every 10 minutes
 setInterval(()=>{
   pets = generateDummyPets(NUM_DUMMIES);
   renderGallery(pets);
-}, UPDATE_INTERVAL);
-
+},UPDATE_INTERVAL);
 </script>
 </body>
 </html>
