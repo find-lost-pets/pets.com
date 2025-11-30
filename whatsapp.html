@@ -1,17 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Send WhatsApp Report</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FindMyPet - WhatsApp Confirmation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background: #f7f7f7;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 18px;
+      color: #555;
+      margin-bottom: 30px;
+    }
+
+    a.button {
+      display: inline-block;
+      padding: 15px 25px;
+      font-size: 18px;
+      color: #fff;
+      background-color: #25D366; /* WhatsApp green */
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background 0.3s;
+    }
+
+    a.button:hover {
+      background-color: #128C7E;
+    }
+
+    footer {
+      position: absolute;
+      bottom: 15px;
+      font-size: 14px;
+      color: #999;
+    }
+  </style>
 </head>
 <body>
-  <h2>🐾 FindMyPet Report Submitted 🐾</h2>
-  <p>Click below to send your WhatsApp message with all your form data:</p>
-  <a id="waLink" href="#" target="_blank">Send on WhatsApp</a>
-
-  <script>
-    // Replace this with the link generated in Apps Script
-    const waLink = "https://script.google.com/macros/s/AKfycbz8z8NawuOAQKVSy9wEErPVRCEolhPnhkNneAMw_lgetyIdPHUoqFeYytpPsgySAmGf/exec";
-    document.getElementById("waLink").href = waLink;
-  </script>
+  <div class="container">
+    <h1>🐾 FindMyPet Report Submitted 🐾</h1>
+    <p>Click the button below to send your WhatsApp message:</p>
+    <a 
+      class="button" 
+      href="https://wa.me/254707775336?text=%F0%9F%90%BE%20*FindMyPet%20Report%20Submitted!*%20%F0%9F%90%BE%0A%0AHello!%20I%20have%20just%20submitted%20my%20pet%20report%20via%20FindMyPet.%20%0AI%20am%20helping%20to%20connect%20pets%20with%20their%20owners.%0A%0AThank%20you%20for%20your%20support!%20%F0%9F%99%8F" 
+      target="_blank">
+      Send on WhatsApp
+    </a>
+  </div>
+  <footer>FindMyPet &copy; 2025</footer>
 </body>
 </html>
